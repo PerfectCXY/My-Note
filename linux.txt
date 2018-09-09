@@ -1,0 +1,138 @@
+
+#Linux上进程有5种状态:
+1. 运行(正在运行或在运行队列中等待)
+2. 中断(休眠中, 受阻, 在等待某个条件的形成或接受到信号)
+3. 不可中断(收到信号不唤醒和不可运行, 进程必须等待直到有中断发生)
+4. 僵死(进程已终止, 但进程描述符存在, 直到父进程调用wait4()系统调用后释放)
+5. 停止(进程收到SIGSTOP, SIGSTP, SIGTIN, SIGTOU信号后停止运行运行)
+
+R 运行 runnable (on run queue)
+S 中断 sleeping
+D 不可中断 uninterruptible sleep (usually IO)
+Z 僵死 a defunct ("zombie") process
+T 停止 traced or stopped
+#注: 其它状态还包括W(无驻留页), <(高优先级进程), N(低优先级进程), L(内存锁页).
+
+#进程说明：
+user          用户名 
+uid           用户号 
+pid           进程号 
+ppid          父进程号 
+size          内存大小, Kbytes字节. 
+vsize         总虚拟内存大小, bytes字节(包含code+data+stack) 
+share         总共享页数 
+nice          进程优先级(缺省为0, 最大为-20) 
+priority(pri) 内核调度优先级 
+pmem          进程分享的物理内存数的百分比 
+trs           程序执行代码驻留大小 
+rss           进程使用的总物理内存数, Kbytes字节 
+time          进程执行起到现在总的CPU暂用时间 
+stat          进程状态 
+cmd(args)     执行命令的简单格式 
+
+#ps常用命令包括:
+ps -aux #查看进程状态
+ps -axjf #显示进程下有哪些子进程
+ps aux | egrep '(cron|syslog)' #找出与 cron 与 syslog 这两个服务有关的 PID 号码
+ps -eo user(用户名),stat,cmd #格式输出来查看进程状态
+ps -eo pid,stat,pri,uid --sort uid #格式输出来查看进程状态，以uid号排序(sort后面跟排序条件)
+
+
+#netstat命令各个参数说明如下：
+　　-t : 指明显示TCP端口
+　　-u : 指明显示UDP端口
+　　-l : 仅显示监听套接字(所谓套接字就是使应用程序能够读写与收发通讯协议(protocol)与资料的程序)
+　　-p : 显示进程标识符和程序名称，每一个套接字/端口都属于一个程序。
+　　-n : 不进行DNS轮询，显示IP(可以加速操作)
+
+netstat -ntlp #查看当前所有tcp端口
+netstat -nulp #查看当前所有udp端口
+即可显示当前服务器上所有端口及进程服务，于grep结合可查看某个具体端口及服务情况
+netstat -ntulp |grep 80   #查看所有80端口使用情况
+netstat -ntulp | grep 3306 #查看所有3306端口使用情况
+
+lsof -i #显示所有打开的端口
+lsof -i:80 #有显示说明已经开放了，如果没有显示说明没有开放
+lsof abc.txt #显示开启文件abc.txt的进程
+lsof -c abc #显示abc进程现在打开的文件
+lsof -c -p 1234 #列出<进程号>为1234的进程所打开的文件
+lsof -g gid #显示归属gid的进程情况
+lsof +d /usr/local/ #显示目录下被进程开启的文件
+lsof +D /usr/local/ #同上，但是会搜索目录下的目录，时间较长
+lsof -d 4 #显示使用fd为4的进程
+lsof -i -U //显示所有打开的端口和UNIX domain文件
+lsof -i[46] [protocol][@hostname|hostaddr][:service|port] #用以显示符合条件的进程情况
+  46 --> IPv4 or IPv6
+  protocol --> TCP or UDP
+  hostname --> Internet host name
+  hostaddr --> IPv4地址
+  service --> /etc/service中的 service name (可以不止一个)
+  port --> 端口号 (可以不止一个)
+
+
+#设置防火墙
+sudo ufw version #防火墙版本
+sudo ufw status #查看防火墙状态
+sudo apt-get install ufw #安装
+sudo ufw enable #启用
+sudo ufw default deny #默认设置deny规则
+sudo ufw allow smtp #允许所有的外部IP访问本机的25/tcp (smtp)端口
+sudo ufw allow 22/tcp #允许所有的外部IP访问本机的22/tcp (ssh)端口
+sudo ufw allow 53 #允许外部访问53端口(tcp/udp)
+sudo ufw allow from 192.168.1.100 #允许此IP访问所有的本机端口
+sudo ufw allow proto udp 192.168.0.1 port 53 to 192.168.0.2 port 53 
+sudo ufw deny smtp #禁止外部访问smtp服务
+sudo ufw delete allow smtp #删除上面建立的某条规则
+
+
+#kill命令
+kill(选项)(参数) #语法
+  -a：当处理当前进程时，不限制命令名和进程号的对应关系；
+  -l <信息编号>：若不加<信息编号>选项，则-l参数会列出全部的信息名称；
+  -p：指定kill 命令只打印相关进程的进程号，而不发送任何信号；
+  -s <信息名称或编号>：指定要送出的信息；
+  -u：指定用户。
+
+
+
+#APT常用命令包括:
+apt search package #搜索包 
+apt show package #获取包的相关信息，如说明、大小、版本等  
+apt depends package #了解使用依赖  
+apt rdepends package #查看该包被哪些包依赖  
+apt-cache pkgnames  #执行pkgnames子命令列出当前所有可用的软件包 
+apt policy package #使用policy命令显示软件包的安装状态和版本信息。
+
+sudo apt install package #安装包  
+sudo apt install package=version #安装指定版本的包  
+sudo apt install package --reinstall #重新安装包  
+sudo apt -f install #修复安装, "-f = --fix-missing"  
+sudo apt remove package #删除包
+sudo apt purge package  #删除包，包括删除配置文件等
+sudo apt autoremove #自动卸载所有未使用的软件包
+
+sudo apt source package #下载该包的源代码   
+sudo apt update #更新apt软件源信息  
+sudo apt upgrade #更新已安装的包  
+sudo apt dist-upgrade #升级系统  
+sudo apt dselect-upgrade #使用dselect升级  
+sudo apt build-dep package #安装相关的编译环境  
+sudo apt clean && sudo apt autoclean #清理无用的包
+sudo apt clean  #清理已下载的软件包，实际上是清楚/var/cache/apt/archives目录中的软件包
+sudo apt autoclean  #删除已经卸载的软件包备份  
+sudo apt-get check #检查是否有损坏的依赖 
+
+#创建链接符
+ln -s 源路径或源文件 链接符
+当前目录是/local，而我经常要访问/usr/local/linux/work
+那么我就可以使用在local下建立一个文件linkwork，
+然后sudo ln -s /usr/local/linux/work  /local/linkwork
+即建立两者之间的链接。
+
+#删除链接
+rm -rf   symbolic_name   注意不是rm -rf   symbolic_name/ 
+那么上面我就是rm -rf   /local/linkwork
+
+
+./startup.sh 启动tomcat
+tail -f catalina.out 查看tomcat日志

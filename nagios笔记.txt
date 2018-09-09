@@ -1,0 +1,309 @@
+ubuntu 16.04 安装 nagios 
+
+首先安装监控端
+
+安装先决条件
+sudo apt-get install wget build-essential apache2 php apache2-mod-php7.0 php-gd libgd-dev sendmail unzip
+
+这里可能会出现如下问题（没有遇到请跳过）：
+E: 无法获得锁 /var/lib/dpkg/lock - open (11: 资源暂时不可用)
+E: 无法锁定管理目录(/var/lib/dpkg/)，是否有其他进程正占用它？
+解决方法：
+sudo rm /var/cache/apt/archives/lock
+sudo rm /var/lib/dpkg/lock
+
+安装完先决条件后，添加用户组
+sudo useradd nagios
+sudo groupadd nagcmd
+sudo usermod -a -G nagcmd nagios
+sudo usermod -a -G nagios,nagcmd www-data
+
+安装nagios
+cd ~
+wget https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.2.0.tar.gz
+tar -xzf nagios-4.2.0.tar.gz
+cd nagios-4.2.0/
+./configure --with-nagios-group=nagios --with-command-group=nagcmd
+sudo make all
+sudo make install
+sudo make install-commandmode
+sudo make install-init
+sudo make install-config
+sudo /usr/bin/install -c -m 644 sample-config/httpd.conf /etc/apache2/sites-available/nagios.conf
+
+将evenhandler目录复制到nagios目录中
+cp -R contrib/eventhandlers/ /usr/local/nagios/libexec/
+chown -R nagios:nagios /usr/local/nagios/libexec/eventhandlers
+
+到这里nagios 安装ok了，但是还没法正常运行，还要安装Nagios-plugins 2.1.2
+cd ~
+wget https://nagios-plugins.org/download/nagios-plugins-2.1.2.tar.gz
+tar -xzf nagios-plugins-2.1.2.tar.gz
+cd nagios-plugins-2.1.2/
+sudo ./configure --with-nagios-user=nagios --with-nagios-group=nagios --with-openssl
+sudo make
+sudo make install
+
+接下来开始配置nagios.cfg 
+sudo vim /usr/local/nagios/etc/nagios.cfg
+找到下行代码取消注释
+cfg_dir=/usr/local/nagios/etc/servers
+保存文件
+
+扩展：nagios.cfg 详解 http://nagios-cn.sourceforge.net/nagios-cn/configuration.html
+
+继续，在nagios目录下创建一个server文件夹
+sudo mkdir -p /usr/local/nagios/etc/servers
+
+在contact.cfg文件中配置接收警报邮件的邮箱
+sudo vim /usr/local/nagios/etc/objects/contacts.cfg
+找到 nagios@localhost 并替换成接收警报邮件的邮箱
+保存文件
+
+配置Apache服务
+sudo a2enmod rewrite
+sudo a2enmod cgi
+
+设置web登录账号为nagiosadmin，并设置密码
+sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
+
+启用Nagios虚拟主机
+sudo ln -s /etc/apache2/sites-available/nagios.conf /etc/apache2/sites-enabled/
+sudo service apache2 restart
+sudo service nagios start
+
+这里可能会出现如下问题（没有遇到请跳过）：
+Failed to start nagios.service: Unit nagios.service not found.
+解决方案：
+sudo vim /etc/systemd/system/nagios.service
+#添加以下内容
+[Unit]
+Description=Nagios
+BindTo=network.target
+
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+User=nagios
+Group=nagios
+Type=simple
+ExecStart=/usr/local/nagios/bin/nagios /usr/local/nagios/etc/nagios.cfg
+
+保存文件，然后
+sudo systemctl enable /etc/systemd/system/nagios.service
+sudo systemctl  start nagios
+sudo systemctl  restart nagios
+
+然后就可以打开浏览器进入 服务器ip/nagios/ 用web账号密码登录
+
+这里就安装完了nagios ，但是需要监控自定义的进程还需要安装nrpe插件
+
+先删除dpkg已安装的nrpe
+dpkg -l | grep nrpe
+dpkg -P nagios-nrpe-server
+没有安装该软件包请忽略
+
+安装依赖包
+sudo apt-get install libssl-dev
+
+开始安装nrpe插件
+cd ~
+wget https://github.com/NagiosEnterprises/nrpe/releases/download/nrpe-3.2.1/nrpe-3.2.1.tar.gz
+tar zxf nrpe-3.2.1.tar.gz
+cd nrpe-3.2.1
+sudo ./configure
+sudo make all
+sudo make install
+sudo make install-plugin
+sudo make install-daemon
+sudo make install-config
+sudo /usr/bin/install -c -m 775 -o nagios -g nagios -d /usr/local/nagios/etc
+sudo /usr/bin/install -c -m 644 -o nagios -g nagios sample-config/nrpe.cfg /usr/local/nagios/etc
+sudo make install-inetd #install the startup files for inetd, launchd, etc.";\
+sudo make install-init #install the startup files for init, systemd, etc
+
+这个时候，会在libexc文件下生成nrpe插件
+cd /usr/local/nagios/libexec/
+ls check_nrpe
+
+安装完成，启动服务
+sudo service nrpe start
+
+配置相关监控文件
+sudo vim /usr/local/nagios/etc/objects/commands.cfg
+#增加到末尾行
+define command{
+        command_name    check_nrpe
+        command_line    $USER1$/check_nrpe -H "$HOSTADDRESS$"  -c "$ARG1$"
+}
+
+保存文件
+
+添加自定义监控规则
+sudo vim /usr/local/nagios/etc/nrpe.cfg
+找到以下注释内容
+# The following examples use hardcoded command arguments... 
+在后面添加以下规则
+command[check_notify]=/usr/lib/nagios/plugins/check_procs  -w 1: -c :3 -a innovus-pay-app-notify
+
+保存文件
+
+扩展：command配置规则详情 http://www.doc88.com/p-2354393830349.html
+
+然后，重启nrpe服务
+sudo service nrpe restart
+
+用以下命令测试自定义规则
+/usr/local/nagios/libexec/check_nrpe -H 127.0.0.1 -c check_notify
+
+
+然后添加监控
+sudo vim /usr/local/nagios/etc/objects/localhost.cfg
+# 在后面添加
+define service{
+        use                             local-service
+        host_name                       localhost #被监控的主机名,这里注意必须是linux且运行着nrpe,而且必须是hosts.cfg中定义的
+        service_description             check_tomcat #服务描述
+        check_command                   check_tcp!8080 #监控tcp 8080端口
+        }
+
+define service{
+		use                       		generic-service
+		host_name                 		localhost
+		service_description       		check_notify
+		check_command             		check_nrpe!check_notify
+		}		
+
+检查nagios配置
+/usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg
+
+重启服务 
+service apache2 restart
+service nagios restart
+到这里监控端就已经安装完成了，接下来安装被监控端
+
+被监控端 linux系统，需安装nagios-plugins 与 nrpe插件
+
+添加nagios用户
+useradd nagios
+passwd nagios
+
+安装nagios-plugins
+cd ~
+wget https://nagios-plugins.org/download/nagios-plugins-2.1.2.tar.gz
+tar -xzf nagios-plugins-2.1.2.tar.gz
+cd nagios-plugins-2.1.2/
+sudo ./configure --with-nagios-user=nagios --with-nagios-group=nagios --with-openssl
+sudo make
+sudo make install
+
+
+先删除dpkg已安装的nrpe
+dpkg -l | grep nrpe
+dpkg -P nagios-nrpe-server
+没有安装该软件包请忽略
+
+安装依赖包
+sudo apt-get install libssl-dev
+
+安装nrpe插件
+cd ~
+wget https://github.com/NagiosEnterprises/nrpe/releases/download/nrpe-3.2.1/nrpe-3.2.1.tar.gz
+tar zxf nrpe-3.2.1.tar.gz
+cd nrpe-3.2.1
+sudo ./configure
+sudo make all
+sudo make install
+sudo make install-plugin
+sudo make install-daemon
+sudo make install-config
+sudo /usr/bin/install -c -m 775 -o nagios -g nagios -d /usr/local/nagios/etc
+sudo /usr/bin/install -c -m 644 -o nagios -g nagios sample-config/nrpe.cfg /usr/local/nagios/etc
+sudo make install-inetd #install the startup files for inetd, launchd, etc.";\
+sudo make install-init #install the startup files for init, systemd, etc
+
+这个时候，会在libexc文件下生成nrpe插件
+cd /usr/local/nagios/libexec/
+ls check_nrpe
+
+安装完成，启动服务
+sudo service nrpe start
+
+配置与监控端连接
+sudo vim /usr/local/nagios/etc/nrpe.cfg
+找到 allowed_hosts=127.0.0.1,::1 在下面添加一行
+allowed_hosts=监控端ip地址
+
+保存文件，然后重启nrpe服务
+sudo service nrpe restart
+
+在被监控端运行下行命令进行检测
+/usr/local/nagios/libexec/check_nrpe -H 127.0.0.1 -c check_users
+在监控端运行下行命令检测
+/usr/local/nagios/libexec/check_nrpe -H 被监控端ip地址 -c check_users
+
+然后在监控端配上监控主机与对应的监控服务，
+在重启nagios服务，就ok了
+
+
+
+扩展：
+
+配置 nagios 遇到的坑
+https://www.jianshu.com/p/7bc822fa8278
+
+监控评率刷新
+http://blog.51cto.com/yangzhiming/844959
+
+nagios.cfg配置文件解析
+http://nagios-cn.sourceforge.net/nagios-cn/configuration.html
+
+mailx 邮件配置
+https://blog.csdn.net/just_shunjian/article/details/78677054
+
+sendEmail发送邮件
+https://www.linuxidc.com/Linux/2017-02/140834.htm
+
+发送邮件 ERROR => ERROR => SMTP-AUTH: Authentication to smtp.163.com:25 failed. 问题
+http://www.ttlsa.com/linux/use-sendemail/
+
+发送邮件 invalid SSL_version specified at /usr/share/perl5/vendor_perl/IO/Socket/SSL.pm line 415.问题
+http://blog.itpub.net/30393770/viewspace-2133677/
+
+问题 E: 无法获得锁 /var/lib/dpkg/lock - open (11: 资源暂时不可用) 
+https://www.cnblogs.com/yidiandhappy/p/6396952.html
+
+nagios 教程
+https://www.jianshu.com/p/7bc822fa8278
+
+安装nrpe
+wget https://github.com/NagiosEnterprises/nrpe/releases/download/nrpe-3.2.1/nrpe-3.2.1.tar.gz
+
+http://www.mamicode.com/info-detail-2060408.html
+https://blog.csdn.net/ronmy/article/details/68926462
+
+nagios 用nrpe监控进程
+https://blog.csdn.net/zhangxueleishamo/article/details/79378138
+
+进入libexec目录测试对应插件 ./check_procs
+./check_procs -w 2: -c :3 -a innovus-pay-app-notify
+
+check_procs 配置设置方案
+http://www.doc88.com/p-2354393830349.html
+
+测试check_notify规则
+/usr/local/nagios/libexec/check_nrpe -H 127.0.0.1 -c check_notify
+
+nagios 安装Failed to start nagios.service: Unit nagios.service not found.问题
+https://serverfault.com/questions/774498/failed-to-start-nagios-service-unit-nagios-service-failed-to-load-no-such-file
+
+nagios详解
+https://www.ibm.com/developerworks/cn/linux/1309_luojun_nagios/index.html
+
+安装
+https://www.howtoing.com/ubuntu-nagios/ nagios
+
+解决Ubuntu的root账号无法登录SSH
+https://blog.csdn.net/weiwei_pig/article/details/50954334

@@ -1,0 +1,140 @@
+tar -zxvf xxx.tar.gz	//解压tar.gz压缩包 ，xxx为压缩包名称
+unzip xxx.zip	//解压zip压缩包，xxx为压缩包名称，需安装unzip工具
+zip xxx.zip		//压缩一个zip文件，xxx为压缩包名称，需安装zip工具
+
+#常用工具
+yum -y install vim*	//安装vim工具
+yum install -y unzip zip	//安装unzip解压工具和zip压缩工具
+yum -y install wget	//安装wget命令
+
+yum search libaio	//查询libaio 安装mysql需依赖libaio
+yum install libaio	//安装libaio
+
+
+# systemctl 命令
+systemctl start xxx 启动一个xxx服务
+systemctl stop xxx 关闭一个xxx服务
+systemctl restart xxx 重启xxx服务
+systemctl status xxx 显示xxx服务状态
+systemctl enable xxx 开机启动xxx服务
+systemctl disable xxx 开机禁用xxx服务
+systemctl is-enabled xxx 查看xxx服务是否开机启动
+systemctl list-unit-files|grep enabled 查看已启动的服务列表
+systemctl --failed 查看启动失败的服务列表
+
+systemctl start firewalld 开启防火墙
+
+# firewalld 防火墙
+firewall-cmd --version 查看版本
+firewall-cmd --help 查看帮助
+firewall-cmd --state 显示状态
+firewall-cmd --zone=public --list-ports 查看所有打开的端口
+firewall-cmd --reload 更新防火墙规则
+firewall-cmd --get-active-zones 查看区域信息
+firewall-cmd --get-zone-of-interface=eth0 查看指定接口所属区域
+firewall-cmd --panic-on 拒绝所有包
+firewall-cmd --panic-off 取消拒绝状态
+firewall-cmd --query-panic 查看是否拒绝
+firewall-cmd --zone=public --add-port=xx/tcp --permanent 开启一个xx端口（--permanent永久生效，没有此参数重启后失效）
+firewall-cmd --zone=public --query-port=xx/tcp 查看xx端口
+firewall-cmd --zone= public --remove-port=xx/tcp --permanent 禁用xx端口
+
+# iptables 防火墙
+iptables选项
+  -t<表>：指定要操纵的表；
+  -A：向规则链中添加条目；
+  -D：从规则链中删除条目；
+  -i：向规则链中插入条目；
+  -R：替换规则链中的条目；
+  -L：显示规则链中已有的条目；
+  -F：清楚规则链中已有的条目；
+  -Z：清空规则链中的数据包计算器和字节计数器；
+  -N：创建新的用户自定义规则链；
+  -P：定义规则链中的默认目标；
+  -h：显示帮助信息；
+  -p：指定要匹配的数据包协议类型；
+  -s：指定要匹配的数据包源ip地址；
+  -j<目标>：指定要跳转的目标；
+  -i<网络接口>：指定数据包进入本机的网络接口；
+  -o<网络接口>：指定数据包要离开本机所使用的网络接口。
+
+iptables -L -n -v 查看防火墙规则
+iptables -A INPUT -s 127.0.0.1 -d 127.0.0.1 -j ACCEPT 允许本地回环接口(即运行本机访问本机)
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT 允许已建立的或相关连的通行
+iptables -A OUTPUT -j ACCEPT 允许所有本机向外的访问
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT 允许访问22端口
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT 允许访问80端口
+iptables -A INPUT -p tcp --dport 21 -j ACCEPT 允许ftp服务的21端口
+iptables -A INPUT -p tcp --dport 20 -j ACCEPT 允许FTP服务的20端口
+iptables -A INPUT -j reject 禁止其他未允许的规则访问
+iptables -A FORWARD -j REJECT 禁止其他未允许的规则访问
+
+iptables -L -n --line-numbers 将所有iptables以序号标记显示
+iptables -D INPUT 2 删除INPUT里序号为2的规则
+
+iptables -I INPUT -s 123.45.6.7 -j DROP 屏蔽单个IP的命令
+iptables -I INPUT -s 123.0.0.0/8 -j DROP 封整个段即从123.0.0.1到123.255.255.254的命令
+iptables -I INPUT -s 124.45.0.0/16 -j DROP 封IP段即从123.45.0.1到123.45.255.254的命令
+iptables -I INPUT -s 123.45.6.0/24 -j DROP 封IP段即从123.45.6.1到123.45.6.254的命令是
+
+/etc/rc.d/init.d/iptables save 保存iptables更改
+
+
+#安装ssh服务
+1、rpm -qa|grep -E "openssh" 查看是否安装了相关软件（显示有server、clients、openssh说明已安装，否则需安装缺失的软件）
+2、未安装或安装不全 使用 sudo yum install openssh*
+3、注册使用服务 sudo systemctl enable sshd , sudo systemctl start sshd
+4、开启防火墙22端口  sudo firewall-cmd --zone=public --add-port=22/tcp --permanent
+5、重启防火墙 sudo service firewalld restart
+
+
+#安装 Oracle jdk
+1、上传 jdk的 tar.gz 包
+2、用tar -zxvf 命令解压
+3、配置环境变量 vim /ect/profile 在末尾添加
+#java environment
+export JAVA_HOME=/usr/java/jdk1.8.0_144
+export CLASSPATH=.:${JAVA_HOME}/jre/lib/rt.jar:${JAVA_HOME}/lib/dt.jar:${JAVA_HOME}/lib/tools.jar
+export PATH=$PATH:${JAVA_HOME}/bin
+4、用source 命令加载/ect/profile文件
+5、java -version 验证
+
+#安装 openjdk
+1、yum install java
+2、使用 java 命令验证是否安装成功
+3、yum install java-devel
+4、使用 javac 命令验证是否安装成功
+
+#安装 mysql 5.7
+1、需要安装 wget命令， yum -y install wget
+2、下载mysql源安装包 wget http://dev.mysql.com/get/mysql57-community-release-el7-8.noarch.rpm
+3、安装mysql源 yum localinstall mysql57-community-release-el7-8.noarch.rpm
+4、检查mysql源是否安装成功 yum repolist enabled | grep "mysql.*-community.*"
+5、安装MySQL 使用 yum install mysql-community-server 命令
+6、启动MySQL服务 systemctl start mysqld
+7、查看MySQL的启动状态 systemctl status mysqld
+8、开机启动 
+>systemctl enable mysqld
+>systemctl daemon-reload
+9、在/var/log/mysqld.log文件中生成了默认密码 grep 'temporary password' /var/log/mysqld.log
+10、登录mysql 后，修改密码 
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass4!';
+或者
+set password for 'root'@'localhost'=password('MyNewPass4!');
+注意：mysql5.7默认安装了密码安全检查插件（validate_password），默认密码检查策略要求密码必须包含：大小写字母、数字和特殊符号，并且长度不能少于8位。否则会提示ERROR 1819 (HY000): Your password does not satisfy the current policy requirements错误
+11、密码安全策略
+>通过msyql环境变量可以查看密码策略的相关信息： show variables like '%password%';
+>指定密码策略,在my.cnf中添加 validate_password_policy=0
+# 可选择 0（LOW），1（MEDIUM），2（STRONG）其中一种，选择2需要提供密码字典文件
+MySQL官网密码策略详细说明：http://dev.mysql.com/doc/refman/5.7/en/validate-password-options-variables.html#sysvar_validate_password_policy
+>如果不需要密码安全插件可修改my.cnf文件，在my.cnf中配置 validate_password = off ,使用 systemctl restart mysqld 命令重启服务
+
+12、添加远程登录用户
+mysql>GRANT ALL PRIVILEGES ON *.* TO '用户名'@'%' IDENTIFIED BY '密码' WITH GRANT OPTION;
+mysql>update user set host = '%' where user ='root'; 使用root用户远程连接
+刷新权限 flush privileges
+13、配置默认编码为utf8
+修改/etc/my.cnf配置文件，在[mysqld]下添加编码配置：
+character_set_server=utf8
+init_connect='SET NAMES utf8'
+重启mysql服务
