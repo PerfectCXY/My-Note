@@ -1,0 +1,29 @@
+1、http://nodejs.cn/download/ 下载并安装 node.js （选择安装路径后Custom Setup选择Online documentation shortcuts..）
+
+2、检测node.js环境
+dos窗口输入“path”命令，输出如下：
+PATH=C:\oraclexe\app\oracle\product\10.2.0\server\bin;C:\Windows\system32;
+C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;
+c:\python32\python;C:\MinGW\bin;C:\Program Files\GTK2-Runtime\lib;
+C:\Program Files\MySQL\MySQL Server 5.5\bin;C:\Program Files\nodejs\;
+C:\Users\rg\AppData\Roaming\npm
+
+检查node.js版本：dos窗口输入“node --version”命令，输出node.js版本
+
+3、安装vue-cli
+在dos窗口输入“npm install  -g vue-cli”，！！速度较慢，建议安装淘宝镜像cnpm
+安装淘宝镜像：
+在dos窗口输入“npm install -g cnpm --registry=https://registry.npm.taobao.org”，等待安装完成后
+用“cnpm install -g vue-cli”安装vue-cli，这样速度快点。
+
+4、使用webpack模板
+在需要创建项目的路径下打开dos，输入“vue init webpack firstVue”（此处firstVue是可以随意起的）。
+此时会弹出 ?Project name (firstVue)，这时输入项目名称
+？Project description(A vue.js project)，输入项目描述
+？Author (***)，输入作者名称
+？Use Eslint to lint your code (Y/n) ，是否使用eslint的代码风格检查器
+？should we run "npm install" for you after the project has been created?   选择yes，use NPM
+
+示例请看：https://blog.csdn.net/skyblacktoday/article/details/78419707
+
+5、安装完npm后有“Project initialization finished!”，还有提示我们可以cd <模板名> 文件夹，执行npm run dev命令，如此，我们就不用再自己输入 npm install命令来安装所需的包了
