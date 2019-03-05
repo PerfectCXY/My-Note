@@ -1,0 +1,1 @@
+$("body").append("<div class='loading-box'>< img src='images/loading.png'/></div>");
