@@ -138,3 +138,32 @@ mysql>update user set host = '%' where user ='root'; 使用root用户远程连接
 character_set_server=utf8
 init_connect='SET NAMES utf8'
 重启mysql服务
+
+#安装 mysql 5.5
+1、用“rpm -qa | grep mariadb”命令，检查是否安装了mariadb
+2、用“rpm -e --nodeps （1检索的mariadb结果）”卸载mariadb
+3、设置rpm
+rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+4、下载webtatic-release RPM
+rpm -Uvh https://mirror.webtatic.com/yum/el6/latest.rpm
+5、安装mysql client and server
+yum install mysql55w mysql55w-server
+6、配置mysql，先启动mysql
+service mysqld start
+7、修改密码（初始密码为空）
+mysqladmin -u root password 'root'
+8、登录mysql
+mysql -u root -p
+9、设置远程链接
+# 查看数据库
+mysql>show databases;
+# 选择mysql库
+mysql>use mysql;
+# 为root用户添加远程连接的权限，host为%表示可以接受任何ip的连接
+mysql>update user set host = '%' where user = 'root';
+# 查看设置后的数据
+mysql>select user,host,password from user;
+10、为root用户设置权限，为所有库所有表赋权
+mysql>GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
+# 刷新用户权限
+mysql>flush privileges;
