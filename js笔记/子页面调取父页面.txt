@@ -1,0 +1,4 @@
+parent.document.getElementById('parent_id').innerHTML
+
+ps:
+parent_id  Îª¸¸Ò³Ãæid

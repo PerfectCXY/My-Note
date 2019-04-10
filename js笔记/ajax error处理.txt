@@ -1,0 +1,22 @@
+	//将参数传到服务器
+	$.ajax({
+		url : "FrmIntelliUserInfoInsert.insert",
+		type : "post",
+		data : {
+			"account" : account,
+			"sex" : sex,
+			"name" : nick_name,
+			"birthday" : birthday,
+			"height" : height,
+		},
+		async : false,
+		dataType : "text",
+		success : function(data){
+			alert("上传成功了");
+		},
+		error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert("status:"+XMLHttpRequest.status);
+            alert("readyState:"+XMLHttpRequest.readyState);
+            alert("textStatus:"+textStatus);
+        }
+	});

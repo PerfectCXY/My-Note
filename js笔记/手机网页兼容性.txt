@@ -1,0 +1,21 @@
+html网页兼容手机浏览器（解决显示页面很小的问题）
+
+其实主要就是改掉HTML页面声明：
+在网页中加入以下代码，就可以正常显示了：
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
+
+解释：
+
+width - viewport的宽度
+height - viewport的高度
+initial-scale - 初始的缩放比例
+minimum-scale - 允许用户缩放到的最小比例
+maximum-scale - 允许用户缩放到的最大比例
+user-scalable - 用户是否可以手动缩放
+
+精简点的话，可以把上面的代码更改为以下代码，效果是一样的：
+ 
+<meta content="width=device-width,user-scalable=no" name="viewport">
+
+最后就是不要设置太大的具体宽度属性了，比如你在网页把Body的宽度属性设为1000px，这肯定是不行的了，但是可以设置为90%，这是屏幕自适应的。

@@ -1,0 +1,14 @@
+/* 得到智能验算ul中的数据 */
+function getUser(tableID) {
+	var args = {};
+	$("." + tableID + " li").each(function(i) {
+		var data = new Object();
+		$(this).find("input[name]").each(function() {
+			var name = $(this).attr("name");
+			data[name] = $(this).val();
+		});
+		args[i] = data;
+	});
+	/* alert("data;" + JSON.stringify(args)); */
+	return JSON.stringify(args);
+}

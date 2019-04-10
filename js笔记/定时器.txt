@@ -1,0 +1,1 @@
+window.setInterval("refreshCount()", 60000);

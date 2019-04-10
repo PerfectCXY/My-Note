@@ -1,0 +1,4 @@
+document.getElementById('iframe_id').contentWindow.childtest();
+
+ps：
+childtest()  为子页方法名

@@ -132,7 +132,7 @@ MySQL官网密码策略详细说明：http://dev.mysql.com/doc/refman/5.7/en/validate-passw
 12、添加远程登录用户
 mysql>GRANT ALL PRIVILEGES ON *.* TO '用户名'@'%' IDENTIFIED BY '密码' WITH GRANT OPTION;
 mysql>update user set host = '%' where user ='root'; 使用root用户远程连接
-刷新权限 flush privileges
+刷新权限 flush privileges；
 13、配置默认编码为utf8
 修改/etc/my.cnf配置文件，在[mysqld]下添加编码配置：
 character_set_server=utf8
