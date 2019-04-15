@@ -91,7 +91,7 @@ iptables -I INPUT -s 123.45.6.0/24 -j DROP ·âIP¶Î¼´´Ó123.45.6.1µ½123.45.6.254µÄÃ
 #°²×° Oracle jdk
 1¡¢ÉÏ´« jdkµÄ tar.gz °ü
 2¡¢ÓÃtar -zxvf ÃüÁî½âÑ¹
-3¡¢ÅäÖÃ»·¾³±äÁ¿ vim /ect/profile ÔÚÄ©Î²Ìí¼Ó
+3¡¢ÅäÖÃ»·¾³±äÁ¿ vim /etc/profile ÔÚÄ©Î²Ìí¼Ó
 #java environment
 export JAVA_HOME=/usr/java/jdk1.8.0_144
 export CLASSPATH=.:${JAVA_HOME}/jre/lib/rt.jar:${JAVA_HOME}/lib/dt.jar:${JAVA_HOME}/lib/tools.jar
@@ -139,31 +139,3 @@ character_set_server=utf8
 init_connect='SET NAMES utf8'
 ÖØÆômysql·þÎñ
 
-#°²×° mysql 5.5
-1¡¢ÓÃ¡°rpm -qa | grep mariadb¡±ÃüÁî£¬¼ì²éÊÇ·ñ°²×°ÁËmariadb
-2¡¢ÓÃ¡°rpm -e --nodeps £¨1¼ìË÷µÄmariadb½á¹û£©¡±Ð¶ÔØmariadb
-3¡¢ÉèÖÃrpm
-rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
-4¡¢ÏÂÔØwebtatic-release RPM
-rpm -Uvh https://mirror.webtatic.com/yum/el6/latest.rpm
-5¡¢°²×°mysql client and server
-yum install mysql55w mysql55w-server
-6¡¢ÅäÖÃmysql£¬ÏÈÆô¶¯mysql
-service mysqld start
-7¡¢ÐÞ¸ÄÃÜÂë£¨³õÊ¼ÃÜÂëÎª¿Õ£©
-mysqladmin -u root password 'root'
-8¡¢µÇÂ¼mysql
-mysql -u root -p
-9¡¢ÉèÖÃÔ¶³ÌÁ´½Ó
-# ²é¿´Êý¾Ý¿â
-mysql>show databases;
-# Ñ¡Ôñmysql¿â
-mysql>use mysql;
-# ÎªrootÓÃ»§Ìí¼ÓÔ¶³ÌÁ¬½ÓµÄÈ¨ÏÞ£¬hostÎª%±íÊ¾¿ÉÒÔ½ÓÊÜÈÎºÎipµÄÁ¬½Ó
-mysql>update user set host = '%' where user = 'root';
-# ²é¿´ÉèÖÃºóµÄÊý¾Ý
-mysql>select user,host,password from user;
-10¡¢ÎªrootÓÃ»§ÉèÖÃÈ¨ÏÞ£¬ÎªËùÓÐ¿âËùÓÐ±í¸³È¨
-mysql>GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
-# Ë¢ÐÂÓÃ»§È¨ÏÞ
-mysql>flush privileges;
