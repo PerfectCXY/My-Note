@@ -1,3 +1,60 @@
+---- 安装部分 ----
+windows安装mysql 8.0.31步骤：
+下载链接：（选择文件小的那个）https://dev.mysql.com/downloads/mysql/
+
+注意：Mysql-8.0.31 推荐下载zip，不会产生很多的注册表垃圾，卸载的时候只需删除安装目录就好。
+
+一、配置my.ini文件
+在安装目录下创建my.ini文件，复制以下内容
+
+[mysqld]
+# 设置3306端口
+port=3306
+# 设置mysql的安装目录   ----------是你的文件路径-------------
+basedir=E:\mysql\mysql
+# 设置mysql数据库的数据的存放目录  ---------是你的文件路径data文件夹自行创建
+datadir=E:\mysql\mysql\data
+# 允许最大连接数
+max_connections=200
+# 允许连接失败的次数。
+max_connect_errors=10
+# 服务端使用的字符集默认为utf8mb4
+character-set-server=utf8mb4
+# 创建新表时将使用的默认存储引擎
+default-storage-engine=INNODB
+# 默认使用“mysql_native_password”插件认证
+#mysql_native_password
+default_authentication_plugin=mysql_native_password
+[mysql]
+# 设置mysql客户端默认字符集
+default-character-set=utf8mb4
+[client]
+# 设置mysql客户端连接服务端时默认使用的端口
+port=3306
+default-character-set=utf8mb4
+
+二、管理员运行CDM窗口，进入mysql的bin目录，初始化mysql并得到初始密码，root@localhost: 你的密码
+mysqld --initialize --console
+
+三、安装mysql服务，修改密码
+# 安装 Mysql
+mysqld --install mysql
+# 启动 Mysql
+net start mysql
+# 链接 Mysql
+mysql -uroot -p
+#  输入密码
+# 修改密码
+ALTER USER 'root'@'localhost' IDENTIFIED BY '新的密码';
+
+四、配置环境变量
+path中添加：MASQL_HOME和MYSQL_HOME\bin
+
+五、执行sql语句验证
+show databases;
+
+
+
 ---- 基本操作部分 ----
 1.本地登录mysql
 mysql -uUSERNAME -pPASSWORD	// USERNAME是用户名，PASSWORD是密码
